@@ -1,0 +1,7 @@
+{
+  "watch": ["server"],
+  "ext": "js,mjs,cjs",
+  "ignore": ["server/data/*.json", "sessions/*"],
+  "exec": "node server/server.js",
+  "signal": "SIGTERM"
+}

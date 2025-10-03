@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#061826" />
+  <title>Zeiterfassung</title>
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icon-192.png?v=2" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Zeiterfassung" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* === SURF / SKATE VIBE THEME ================================================= */
+    :root {
+      --font:"Outfit",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      --bg:#061826;
+      --bg-accent1:#0b2d40;
+      --bg-accent2:#091f33;
+      --gradient:linear-gradient(135deg,#00ffc6 0%,#00b2ff 25%,#6d47ff 55%,#ff3d81 85%);
+      --gradient-soft:linear-gradient(120deg,#102b3d,#142f52 55%,#1b1f36);
+      --glass:rgba(255,255,255,.05);
+      --glass-border:rgba(255,255,255,.12);
+      --text:#ebf7ff;
+      --text-dim:#92b4c4;
+      --danger:#ff4d4d;
+      --warn:#ffc042;
+      --green:#33e4a2;
+      --radius-xs:4px; --radius-sm:10px; --radius:20px; --radius-lg:30px;
+      --shadow:0 4px 28px -6px rgba(0,0,0,.55),0 2px 8px -2px rgba(0,0,0,.5);
+      --inset-glow:0 0 0 1px rgba(255,255,255,.12),0 0 0 3px rgba(255,255,255,.04) inset;
+      --focus-ring:0 0 0 3px rgba(0,255,198,.5),0 0 0 1px #00ffc6;
+      --timer-glow:0 0 16px -2px #00ffc6,0 0 32px -6px #6d47ff;
+      --accent:#00ffc6;
+      --accent-alt:#ff3d81;
+      --accent-alt2:#6d47ff;
+      --transition:.28s cubic-bezier(.16,.8,.22,1);
+    }
+    body.theme-light {
+      --bg:#f4f8fb; --bg-accent1:#ffffff; --bg-accent2:#e6eef5; --text:#13242e; --text-dim:#5c7683; --glass:rgba(255,255,255,.6); --glass-border:rgba(0,0,0,.08); --gradient-soft:linear-gradient(140deg,#f7fbff,#e3f2ff 60%,#eef1ff);
+    }
+
+    html,body { height:100%; }
+    body { margin:0; font-family:var(--font); background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+
+    /* Animated multi-layer gradient background */
+    body::before, body::after { content:""; position:fixed; inset:0; z-index:-2; background:radial-gradient(circle at 15% 20%,#0e3f57,transparent 60%),radial-gradient(circle at 80% 70%,#131f46,transparent 55%),linear-gradient(140deg,#05121b,#071d2b 40%,#061826); mix-blend-mode:normal; animation:bgShift 18s linear infinite; }
+    body::after { z-index:-1; background:linear-gradient(120deg,#061826,#0b2d40 50%,#061826); opacity:.65; filter:blur(60px); animation:bgPulse 12s ease-in-out infinite; }
+    @keyframes bgShift { 0%{transform:translate3d(0,0,0);} 50%{transform:translate3d(0,-3%,0);} 100%{transform:translate3d(0,0,0);} }
+    @keyframes bgPulse { 0%,100%{opacity:.55;} 50%{opacity:.85;} }
+
+    /* HEADER */
+    header { position:sticky; top:0; z-index:40; display:flex; align-items:center; justify-content:space-between; padding:.85rem 1.2rem; backdrop-filter:blur(18px) saturate(1.4); background:linear-gradient(135deg,rgba(255,255,255,.07),rgba(255,255,255,.02)); border-bottom:1px solid var(--glass-border); box-shadow:0 2px 14px -6px rgba(0,0,0,.6); }
+    .brand { display:flex; align-items:center; gap:.85rem; font-weight:600; letter-spacing:.5px; font-size:1.05rem; }
+    .brandBadge { width:46px; height:46px; background:conic-gradient(from 0deg,var(--accent),#00b2ff 40%,var(--accent-alt2) 70%,var(--accent-alt)); border-radius:18px; position:relative; box-shadow:0 4px 18px -4px #00ffc6aa,0 0 0 1px #0b2d40, inset 0 0 12px -2px rgba(255,255,255,.2); display:grid; place-items:center; font-size:1.15rem; font-weight:700; color:#061826; text-shadow:0 0 0 transparent; }
+    .brandBadge::after { content:""; position:absolute; inset:2px; background:linear-gradient(145deg,#fff,#b4fff2); opacity:.15; border-radius:14px; }
+    .brandTag { font-size:.6rem; text-transform:uppercase; letter-spacing:2px; background:linear-gradient(90deg,var(--accent-alt2),var(--accent-alt)); -webkit-background-clip:text; background-clip:text; color:transparent; font-weight:700; }
+
+    main { width:100%; max-width:1200px; margin:0 auto; padding:1.5rem clamp(.9rem,2vw,2.2rem) 4rem; }
+
+    /* BUTTONS */
+    button { cursor:pointer; font-family:inherit; font-weight:500; letter-spacing:.25px; border-radius:14px; border:1px solid var(--glass-border); padding:.75rem 1.05rem; font-size:.9rem; background:linear-gradient(135deg,rgba(255,255,255,.07),rgba(255,255,255,.02)); color:var(--text); display:inline-flex; align-items:center; gap:.55rem; position:relative; overflow:hidden; transition:var(--transition); backdrop-filter:blur(16px) saturate(1.2); box-shadow:var(--inset-glow); }
+    button.primary { background:linear-gradient(135deg,var(--accent) -10%,#00b2ff 25%,var(--accent-alt2) 65%,var(--accent-alt)); color:#061826; font-weight:600; box-shadow:0 6px 28px -10px #00ffc6aa,0 2px 10px -4px #6d47ffaa; border:none; }
+    button.primary:hover { filter:brightness(1.06) saturate(1.1); transform:translateY(-3px); }
+    button.danger { background:linear-gradient(135deg,#ff5a5a,#d72222); color:#fff; border:1px solid #ff5a5a; box-shadow:0 4px 18px -6px #ff3d8166; }
+    button.outline { background:transparent; color:var(--accent); border:1px solid var(--accent); }
+    button:hover { box-shadow:0 4px 14px -6px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.08); }
+    button:active { transform:translateY(0); filter:brightness(.95); }
+    button:focus-visible { outline:none; box-shadow:var(--focus-ring); }
+    #btnTheme { width:44px; justify-content:center; font-size:1.05rem; background:linear-gradient(135deg,#162b33,#0d2430); }
+
+    /* HERO START PANEL */
+    #startPanel { padding:3.5rem 1rem 2.5rem; display:grid; place-items:center; }
+    #btnStart { font-size:1.55rem !important; padding:1.55rem 3.2rem !important; border-radius:34px; position:relative; isolation:isolate; }
+    #btnStart::before { content:""; position:absolute; inset:0; border-radius:inherit; background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.55),transparent 70%); mix-blend-mode:overlay; opacity:.4; pointer-events:none; }
+    #btnStart::after { content:"Los!"; position:absolute; right:14px; top:50%; transform:translateY(-50%) rotate(-8deg); font-size:.65rem; letter-spacing:1px; background:#061826; color:var(--accent); padding:.3rem .55rem; border-radius:10px; font-weight:600; box-shadow:0 2px 6px -2px #061826; }
+
+    /* ACTIVE SESSION CARD */
+    #activeSessionCard { border:1px solid var(--glass-border); background:linear-gradient(140deg,rgba(255,255,255,.07),rgba(255,255,255,.02)); border-radius:30px; padding:1.4rem 1.6rem 1.5rem; box-shadow:var(--shadow); position:relative; overflow:hidden; }
+    #activeSessionCard::before { content:""; position:absolute; width:240%; height:240%; left:-70%; top:-80%; background:conic-gradient(from 0deg,var(--accent) 0%,transparent 20%,transparent 40%,var(--accent-alt2) 55%,transparent 75%,var(--accent-alt) 85%,transparent 100%); animation:spin 18s linear infinite; opacity:.18; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    .timerDisplay { font-size:clamp(2.4rem,5vw,3.4rem); font-weight:700; letter-spacing:1px; font-variant-numeric:tabular-nums; line-height:1; background:linear-gradient(90deg,var(--accent) 0%,#00b2ff 25%,var(--accent-alt2) 60%,var(--accent-alt)); -webkit-background-clip:text; background-clip:text; color:transparent; filter:drop-shadow(var(--timer-glow)); }
+    .sub { color:var(--text-dim); font-size:.8rem; font-variant-numeric:tabular-nums; }
+    #pauseInfo { letter-spacing:.5px; }
+    #startMeta { color:var(--text-dim); }
+
+    #activeIndicator, #dangerIndicator { width:16px; height:16px; border-radius:50%; position:relative; box-shadow:0 0 0 4px rgba(0,255,198,.25); }
+    #activeIndicator { background:var(--green); animation:pulse 2.4s ease-in-out infinite; }
+    #dangerIndicator { background:var(--danger); box-shadow:0 0 0 6px rgba(255,77,77,.35); display:none; }
+    @keyframes pulse { 0%{transform:scale(1);} 50%{transform:scale(1.24);} 100%{transform:scale(1);} }
+
+    .redAlertBar { display:none; margin-top:.9rem; padding:.75rem .95rem; border-radius:18px; background:linear-gradient(135deg,#ff4d4d,#ff2e63); color:#fff; font-size:.7rem; font-weight:600; letter-spacing:.5px; align-items:center; justify-content:space-between; box-shadow:0 6px 28px -10px #ff3d8188; }
+
+    .actions { display:flex; gap:.6rem; flex-wrap:wrap; }
+
+    /* TABLES / DASHBOARD */
+    #dashboard h2, #clientStatsSection h2 { font-size:1.05rem; letter-spacing:.5px; text-transform:uppercase; font-weight:600; background:linear-gradient(90deg,var(--accent),var(--accent-alt2)); -webkit-background-clip:text; background-clip:text; color:transparent; margin:2.2rem 0 1.1rem; }
+    table { width:100%; border-collapse:separate; border-spacing:0 5px; font-size:.75rem; }
+    th { text-align:left; font-size:.55rem; letter-spacing:1px; text-transform:uppercase; padding:.55rem .7rem; color:var(--text-dim); position:sticky; top:0; backdrop-filter:blur(14px); background:rgba(6,24,38,.75); border-bottom:1px solid var(--glass-border); z-index:2; }
+    td { background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.02)); padding:.55rem .7rem; border:1px solid var(--glass-border); }
+    tbody tr { cursor:pointer; transition:.25s ease; }
+    tbody tr:hover td { background:linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,255,255,.04)); }
+    tbody tr td:first-child { border-top-left-radius:14px; border-bottom-left-radius:14px; }
+    tbody tr td:last-child { border-top-right-radius:14px; border-bottom-right-radius:14px; }
+    .badge { display:inline-block; background:linear-gradient(135deg,var(--accent-alt2),var(--accent-alt)); padding:.3rem .6rem; border-radius:999px; font-size:.55rem; letter-spacing:.5px; font-weight:500; color:#fff; box-shadow:0 2px 6px -3px #000; }
+
+    .clientGroup { margin-top:2.2rem; }
+    .clientHeader { font-size:.95rem; font-weight:600; margin:.25rem 0 .55rem; display:flex; align-items:center; gap:.6rem; }
+    .pill { background:linear-gradient(135deg,var(--accent-alt2),var(--accent-alt)); color:#fff; padding:.3rem .7rem; border-radius:999px; font-size:.55rem; letter-spacing:.6px; font-weight:600; box-shadow:0 2px 8px -4px #000; }
+
+    #noData { padding:2rem; text-align:center; color:var(--text-dim); font-size:.85rem; }
+
+    /* DIALOGS */
+    dialog { border:none; border-radius:38px; width:min(560px,92vw); padding:0; box-shadow:0 18px 60px -18px #000a,0 8px 30px -12px #000c; background:linear-gradient(135deg,#0b2d40,#061826); color:var(--text); overflow:hidden; }
+    dialog::backdrop { background:rgba(2,10,18,.68); backdrop-filter:blur(8px) saturate(1.6); }
+    .modalHeader { padding:1.05rem 1.35rem; background:linear-gradient(135deg,var(--accent) -10%,#00b2ff 25%,var(--accent-alt2) 65%,var(--accent-alt)); color:#061826; display:flex; justify-content:space-between; align-items:center; font-weight:600; letter-spacing:.5px; }
+    .modalBody { padding:1.2rem 1.35rem 1.4rem; display:grid; gap:1.05rem; }
+    .field { display:grid; gap:.35rem; }
+    .field label { font-size:.55rem; font-weight:600; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim); }
+    .field input,.field textarea,.field select { padding:.7rem .85rem; border:1px solid var(--glass-border); border-radius:14px; font:inherit; background:rgba(255,255,255,.05); color:var(--text); resize:vertical; backdrop-filter:blur(4px); transition:var(--transition); }
+    .field input:focus,.field textarea:focus { outline:none; box-shadow:var(--focus-ring); }
+    .modalFooter { padding:0 1.35rem 1.3rem; display:flex; justify-content:flex-end; gap:.8rem; }
+
+    /* LOGIN */
+    body:not(.authenticated) #appContent { display:none; }
+    body.authenticated #loginScreen { display:none; }
+    #loginScreen { max-width:460px; margin:clamp(2.5rem,7vh,4.5rem) auto; background:linear-gradient(140deg,rgba(255,255,255,.08),rgba(255,255,255,.02)); padding:2.4rem 2.1rem 2.7rem; border-radius:40px; box-shadow:0 30px 80px -40px #000c,0 12px 40px -20px #000a; position:relative; overflow:hidden; backdrop-filter:blur(22px) saturate(1.8); border:1px solid var(--glass-border); }
+    #loginScreen::before { content:""; position:absolute; inset:0; background:radial-gradient(circle at 18% 18%,rgba(0,255,198,.35),transparent 60%),radial-gradient(circle at 85% 80%,rgba(255,61,129,.25),transparent 65%); opacity:.9; mix-blend-mode:overlay; pointer-events:none; }
+    #loginScreen h2 { margin:0 0 1.5rem; font-size:1.55rem; letter-spacing:.5px; background:var(--gradient); -webkit-background-clip:text; background-clip:text; color:transparent; font-weight:600; }
+    #loginForm { display:grid; gap:1.05rem; }
+    #loginForm label { font-size:.55rem; text-transform:uppercase; letter-spacing:1.1px; font-weight:600; color:var(--text-dim); }
+    #loginError { color:var(--danger); font-size:.7rem; min-height:1.1em; }
+
+    /* SCROLLBAR */
+    * { scrollbar-width:thin; scrollbar-color:var(--accent) transparent; }
+    *::-webkit-scrollbar { width:10px; height:10px; }
+    *::-webkit-scrollbar-thumb { background:linear-gradient(var(--accent-alt2),var(--accent-alt)); border-radius:16px; }
+
+    /* Inline Client / Tasks Panel */
+    #inlineMeta { margin-top:1.2rem; display:grid; gap:1rem; }
+    #inlineMeta .inlineRow { display:flex; gap:.6rem; flex-wrap:wrap; align-items:flex-start; }
+    #inlineMeta select,#inlineMeta input { padding:.55rem .75rem; border:1px solid var(--glass-border); border-radius:12px; background:rgba(255,255,255,.06); color:var(--text); font:inherit; backdrop-filter:blur(4px); min-width:140px; }
+    #inlineMeta input:focus, #inlineMeta select:focus { outline:none; box-shadow:var(--focus-ring); }
+    #inlineTaskInput { flex:1; }
+    #taskChips { display:flex; gap:.45rem; flex-wrap:wrap; margin-top:.55rem; }
+    .taskChip { position:relative; background:linear-gradient(135deg,var(--accent-alt2),var(--accent-alt)); color:#fff; padding:.4rem .75rem .4rem .75rem; border-radius:999px; font-size:.6rem; letter-spacing:.4px; display:flex; align-items:center; gap:.45rem; cursor:default; }
+    .taskChip button { all:unset; cursor:pointer; font-size:.75rem; line-height:1; padding:.1rem .3rem; background:rgba(255,255,255,.25); border-radius:6px; color:#fff; }
+    .taskChip button:hover { background:rgba(0,0,0,.35); }
+    #btnToggleNotes { display:none; }
+    @media (max-width:720px){
+      #inlineMeta { position:fixed; left:0; right:0; bottom:0; padding:1rem 1rem calc(env(safe-area-inset-bottom) + 1rem); background:linear-gradient(135deg,rgba(6,24,38,.95),rgba(11,45,64,.92)); backdrop-filter:blur(30px) saturate(1.6); border-top:1px solid var(--glass-border); box-shadow:0 -8px 24px -12px #000a; transform:translateY(0); transition:transform .4s ease; z-index:60; }
+      body.inlinePanel-hidden #inlineMeta { transform:translateY(105%); }
+      #btnToggleNotes { display:inline-flex; }
+    }
+
+    @media (max-width:820px){
+      main { padding:1.2rem 1.1rem 4rem; }
+      header { flex-wrap:wrap; gap:.75rem; }
+      .actions { flex:1 1 100%; justify-content:flex-end; }
+      #btnStart { font-size:1.35rem !important; padding:1.3rem 2.4rem !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="loginScreen">
+    <h2>Anmelden</h2>
+    <form id="loginForm" autocomplete="off">
+      <div class="field"><label for="userInput">Benutzername</label><input id="userInput" required placeholder="Name" /></div>
+      <div class="field"><label for="passInput">Passwort</label><input id="passInput" type="password" required placeholder="Passwort" /></div>
+      <div id="loginError"></div>
+      <button class="primary" type="submit" style="font-size:1rem;">Login</button>
+      <div style="font-size:.55rem; opacity:.6; line-height:1.3; letter-spacing:.4px; margin-top:.6rem;">Serverseitig authentifiziert – sichere Speicherung lokal nicht erforderlich.</div>
+      <div style="margin-top:1rem; font-size:.55rem; letter-spacing:.5px; opacity:.7; text-align:center;">
+        <a href="/impressum.html" style="color:#00ffc6; text-decoration:none;">Impressum</a> · <a href="/datenschutz.html" style="color:#00ffc6; text-decoration:none;">Datenschutz</a>
+      </div>
+    </form>
+  </div>
+  <div id="appContent">
+    <header>
+      <div class="brand">
+        <div class="brandBadge">Z</div>
+        <div>
+          <div style="font-weight:600; letter-spacing:.5px; font-size:.95rem;">Zeiterfassung</div>
+          <div class="brandTag">Focus · Flow · Performance</div>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="btnTheme" title="Theme umschalten">🌙</button>
+        <button id="btnExportCsv" title="CSV exportieren">CSV</button>
+        <button id="btnMail" title="Per Mail senden">Mail</button>
+        <button id="btnInstall" style="display:none;">Installieren</button>
+        <button id="btnLogout" style="display:none;">Logout</button>
+      </div>
+    </header>
+    <main>
+      <section id="activeSessionSection">
+        <div id="activeSessionCard" style="display:none;">
+          <div class="row" style="align-items:flex-start; gap:1.3rem;">
+            <div class="row" style="gap:.65rem;">
+              <div id="activeIndicator" title="Läuft"></div>
+              <div id="dangerIndicator" title=">6h ohne bestätigte Pause"></div>
+            </div>
+            <div class="grow">
+              <div class="timerDisplay" id="timerDisplay">00:00:00</div>
+              <div class="sub" id="pauseInfo">Pause: 00:00:00</div>
+              <div class="redAlertBar" id="alertBar">
+                <span>6h ohne bestätigte Pause überschritten!</span>
+                <button class="danger" id="btnAcknowledgeBreak" style="background:#fff; color:#ff2e63; border-color:#ff2e63;">Pause gemacht</button>
+              </div>
+            </div>
+          </div>
+          <div class="split" style="margin-top:1rem; align-items:center;">
+            <div class="row" style="gap:.6rem; flex-wrap:wrap;">
+              <button id="btnPause" class="outline">Pause starten</button>
+              <button id="btnEnd" class="danger">Arbeitszeit beenden</button>
+              <button id="btnCancelActive" class="outline" style="color:#ff4d4d; border-color:#ff4d4d;">Abbrechen</button>
+              <button id="btnToggleNotes" class="outline" title="Notizen Panel umschalten">Notizen</button>
+            </div>
+            <div><small class="sub" id="startMeta"></small></div>
+          </div>
+          <div id="inlineMeta" class="inlinePanel">
+            <div class="inlineRow" style="flex-wrap:wrap;">
+              <div style="flex:1 1 240px; min-width:200px; display:flex; gap:.5rem; flex-wrap:wrap; align-items:center;">
+                <label style="font-size:.55rem; letter-spacing:1px; text-transform:uppercase; color:var(--text-dim); flex:1 1 100%;">Auftraggeber (live)</label>
+                <select id="inlineClientSelect" style="flex:1; min-width:140px;"></select>
+                <input id="inlineClientInput" placeholder="Neu..." style="flex:1; min-width:140px;" />
+              </div>
+              <div style="flex:2 1 320px; min-width:240px;">
+                <label style="font-size:.55rem; letter-spacing:1px; text-transform:uppercase; color:var(--text-dim);">Notizen / Aufgaben (Enter)</label>
+                <div style="display:flex; flex-direction:column;">
+                  <div style="display:flex; gap:.5rem;">
+                    <input id="inlineTaskInput" placeholder="Neue Aufgabe..." />
+                    <button id="btnClearTasks" class="outline" style="white-space:nowrap;">Reset</button>
+                  </div>
+                  <div id="taskChips"></div>
+                </div>
+              </div>
+            </div>
+            <div style="font-size:.55rem; color:var(--text-dim); letter-spacing:.4px;">Diese Angaben werden beim Abschließen vorbefüllt. Auftraggeber & Aufgaben können jederzeit geändert / ergänzt werden.</div>
+          </div>
+        </div>
+        <div id="startPanel">
+          <button id="btnStart" class="primary">Arbeitszeit starten</button>
+        </div>
+      </section>
+      <section id="dashboard">
+        <h2>Dashboard</h2>
+        <div id="dashboardContent"></div>
+        <div id="noData">Noch keine Einträge</div>
+      </section>
+      <section id="clientStatsSection" style="margin-top:2.8rem;">
+        <h2>Auswertung Auftraggeber</h2>
+        <div id="noClientStats" style="padding:1rem; font-size:.78rem; color:var(--text-dim);">Noch keine Daten</div>
+        <div style="overflow:auto;">
+          <table id="clientStatsTable" style="min-width:760px; display:none;">
+            <thead><tr><th data-sort="client">Auftraggeber</th><th data-sort="entries">Einträge</th><th data-sort="gross">Brutto</th><th data-sort="pause">Pause</th><th data-sort="net">Netto</th><th data-sort="avg">Ø Netto / Eintrag</th><th data-sort="first">Erster Tag</th><th data-sort="last">Letzter Tag</th></tr></thead>
+            <tbody id="clientStatsBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    <dialog id="finishDialog">
+      <form method="dialog" id="finishForm">
+        <div class="modalHeader"><strong>Eintrag abschließen</strong><button type="button" id="btnCloseDialog" style="background:transparent; color:#061826; border:none; font-size:1.4rem; line-height:1;">×</button></div>
+        <div class="modalBody">
+          <div class="field"><label for="clientSelect">Auftraggeber *</label><div style="display:flex; gap:.5rem; flex-wrap:wrap;"><select id="clientSelect" style="flex:1; min-width:160px;"></select><input id="clientInput" placeholder="Neu..." style="flex:1; min-width:160px;" /></div></div>
+          <div class="field"><label for="skillsInput">Skills (Komma-getrennt)</label><input id="skillsInput" placeholder="z.B. Planung, Analyse" /></div>
+          <div class="field"><label for="tasksInput">Aufgabe/n</label><textarea id="tasksInput" rows="3" placeholder="Kurzbeschreibung der Aufgaben"></textarea></div>
+          <div class="field"><label>Übersicht</label><div id="summaryBox" style="font-size:.7rem; line-height:1.35; background:rgba(255,255,255,.05); padding:.7rem .85rem; border-radius:14px; border:1px solid var(--glass-border);"></div></div>
+        </div>
+        <div class="modalFooter"><button type="button" id="btnCancelDialog" class="outline">Abbrechen</button><button type="submit" class="primary">Speichern</button></div>
+      </form>
+    </dialog>
+    <dialog id="editEntryDialog">
+      <form method="dialog" id="editEntryForm">
+        <div class="modalHeader"><strong>Eintrag bearbeiten</strong><button type="button" id="btnCloseEditDialog" style="background:transparent; color:#061826; border:none; font-size:1.4rem; line-height:1;">×</button></div>
+        <div class="modalBody">
+          <input type="hidden" id="editId" />
+          <div class="field"><label for="editClientInput">Auftraggeber *</label><div style="display:flex; gap:.5rem; flex-wrap:wrap;"><select id="editClientSelect" style="flex:1; min-width:140px;"></select><input id="editClientInput" required style="flex:1; min-width:140px;" /></div></div>
+          <div class="field"><label for="editSkillsInput">Skills</label><input id="editSkillsInput" placeholder="Komma-getrennt" /></div>
+          <div class="field"><label for="editTasksInput">Aufgabe/n</label><textarea id="editTasksInput" rows="3"></textarea></div>
+          <div class="grid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:.9rem;">
+            <div class="field"><label for="editStartInput">Start</label><input id="editStartInput" type="datetime-local" required /></div>
+            <div class="field"><label for="editEndInput">Ende</label><input id="editEndInput" type="datetime-local" required /></div>
+            <div class="field"><label for="editPauseInput">Pause (Min)</label><input id="editPauseInput" type="number" min="0" step="1" value="0" /></div>
+          </div>
+          <div style="font-size:.58rem; color:var(--text-dim); line-height:1.35;">Netto = (Ende - Start) - Pause. Änderungen wirken sofort.</div>
+        </div>
+        <div class="modalFooter"><button type="button" id="btnDeleteEntry" class="danger" style="margin-right:auto;">Löschen</button><button type="button" id="btnCancelEditDialog" class="outline">Abbrechen</button><button type="submit" class="primary">Speichern</button></div>
+      </form>
+    </dialog>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

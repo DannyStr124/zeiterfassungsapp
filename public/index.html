@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <title>Offline / Fallback</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!-- Entfernt automatische Weiterleitung, dient jetzt als einfacher Fallback wenn die Haupt-App nicht geladen wird. -->
+  <style>
+    body { font-family: system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:#061826; color:#e6f4ff; margin:0; display:grid; place-items:center; min-height:100vh; padding:2rem; }
+    .box { max-width:520px; text-align:center; line-height:1.5; }
+    h1 { font-size:1.2rem; margin:0 0 1rem; letter-spacing:.5px; }
+    p { font-size:.85rem; opacity:.8; }
+    a { color:#00ffc6; text-decoration:none; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Zeiterfassung – Fallback</h1>
+    <p>Diese Seite ist ein Fallback ohne Auto-Redirect. Wenn du das hier siehst, wurde die Hauptoberfläche nicht korrekt geladen oder du bist ausgeloggt.</p>
+    <p><a href="/">Zur Startseite neu laden</a></p>
+  </div>
+</body>
+</html>

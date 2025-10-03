@@ -1,0 +1,31 @@
+{
+  "name": "zeiterfassungsapp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development concurrently \"nodemon\" \"vite\"",
+    "build": "vite build",
+    "preview": "vite preview",
+    "server": "cross-env node server/server.js",
+    "start": "cross-env NODE_ENV=production node server/server.js"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "date-fns": "^3.6.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.0",
+    "express-session": "^1.17.3",
+    "uuid": "^9.0.1",
+    "helmet": "^7.1.0",
+    "session-file-store": "^1.5.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "cross-env": "^7.0.3",
+    "nodemon": "^3.1.10",
+    "vite": "^5.3.1"
+  },
+  "description": "Einfache PWA Zeiterfassungsapp (Vite + Vanilla JS + Backend Auth)",
+  "author": ""
+}

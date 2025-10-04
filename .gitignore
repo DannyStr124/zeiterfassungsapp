@@ -164,10 +164,9 @@ dist
 server/data/entries.json
 server/data/*.db
 sessions/
-# Explicit env (already covered above, but ensure)
 .env
-# Keep directory structure
 !server/data/entries.sample.json
-# Optional placeholder (create .gitkeep manually if needed)
+# Keep empty dir
+!server/data/.gitkeep
 
 # End of https://www.toptal.com/developers/gitignore/api/node,visualstudiocode

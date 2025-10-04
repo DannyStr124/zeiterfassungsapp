@@ -103,36 +103,35 @@ app.post('/api/entries', requireAuth, (req,res)=>{
   const { client='', skills=[], tasks='', start, end, pauseMs=0, acknowledgedBreak=false } = req.body || {};
   if (!start || !end) return res.status(400).json({error:'Missing start/end'});
   const entry = { id: uuid(), client:String(client), skills:skills.map(s=>String(s)), tasks:String(tasks), start:Number(start), end:Number(end), pauseMs:Number(pauseMs), acknowledgedBreak: !!acknowledgedBreak };
-  const list = Storage.read();
-  list.push(entry);
-  Storage.write(list);
+  Storage.append(entry);
   res.status(201).json(entry);
 });
 
 app.put('/api/entries/:id', requireAuth, (req,res)=>{
-  const list = Storage.read();
-  const idx = list.findIndex(e=>e.id===req.params.id);
-  if (idx===-1) return res.status(404).json({error:'Not found'});
-  const cur = list[idx];
   const { client, skills, tasks, start, end, pauseMs, acknowledgedBreak } = req.body || {};
-  if (start && end && Number(end) <= Number(start)) return res.status(400).json({error:'End must be after start'});
-  if (client!==undefined) cur.client=String(client);
-  if (skills!==undefined) cur.skills=Array.isArray(skills)?skills.map(s=>String(s)):cur.skills;
-  if (tasks!==undefined) cur.tasks=String(tasks);
-  if (start!==undefined) cur.start=Number(start);
-  if (end!==undefined) cur.end=Number(end);
-  if (pauseMs!==undefined) cur.pauseMs=Number(pauseMs);
-  if (acknowledgedBreak!==undefined) cur.acknowledgedBreak=!!acknowledgedBreak;
-  Storage.write(list);
-  res.json(cur);
+  // Load current entry to validate
+  const current = Storage.read().find(e=>e.id===req.params.id);
+  if(!current) return res.status(404).json({error:'Not found'});
+  const newStart = start!==undefined ? Number(start) : current.start;
+  const newEnd = end!==undefined ? Number(end) : current.end;
+  if (newEnd !== undefined && newStart !== undefined && Number(newEnd) <= Number(newStart)) {
+    return res.status(400).json({error:'End must be after start'});
+  }
+  const patch = {};
+  if (client!==undefined) patch.client = String(client);
+  if (skills!==undefined) patch.skills = Array.isArray(skills)? skills.map(s=>String(s)) : current.skills;
+  if (tasks!==undefined) patch.tasks = String(tasks);
+  if (start!==undefined) patch.start = Number(start);
+  if (end!==undefined) patch.end = Number(end);
+  if (pauseMs!==undefined) patch.pauseMs = Number(pauseMs);
+  if (acknowledgedBreak!==undefined) patch.acknowledgedBreak = !!acknowledgedBreak;
+  Storage.replaceById(req.params.id, patch);
+  res.json({ ...current, ...patch });
 });
 
 app.delete('/api/entries/:id', requireAuth, (req,res)=>{
-  const list = Storage.read();
-  const before = list.length;
-  const next = list.filter(e=>e.id!==req.params.id);
-  if (next.length === before) return res.status(404).json({error:'Not found'});
-  Storage.write(next);
+  const ok = Storage.deleteById(req.params.id);
+  if(!ok) return res.status(404).json({error:'Not found'});
   res.json({ success:true });
 });
 
@@ -178,12 +177,10 @@ app.post('/api/active/cancel', requireAuth, (req,res)=>{ const a = loadActive();
 app.post('/api/active/finish', requireAuth, (req,res)=>{
   const a = loadActive();
   if(!a) return res.status(404).json({error:'No active'});
-  const list = Storage.read();
   if(a.pauseStartedAt){ a.pauseMs += Date.now() - a.pauseStartedAt; a.pauseStartedAt=null; }
   const end = Date.now();
   const entry = { id: uuid(), client:a.client, skills:a.skills, tasks:a.tasks, start:a.start, end, pauseMs:a.pauseMs, acknowledgedBreak:a.acknowledgedBreak };
-  list.push(entry);
-  Storage.write(list);
+  Storage.append(entry);
   saveActive(null);
   res.json(entry);
 });
@@ -203,7 +200,7 @@ if (fs.existsSync(DIST_DIR)) {
   console.log('Kein dist/ gefunden. Für Single-Port Produktion zuerst: npm run build');
 }
 
-app.listen(PORT, ()=>{
+app.listen(PORT, '0.0.0.0', ()=>{
   console.log('Server listening on '+PORT);
   if (ADMIN_PASSWORD_HASH.includes('REPLACE_ME_WITH_HASH')) {
     console.warn('\nIMPORTANT: Set ADMIN_PASSWORD_HASH env var (bcrypt hash of your password).');

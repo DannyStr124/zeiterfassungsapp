@@ -7,6 +7,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { v4 as uuid } from 'uuid';
 import helmet from 'helmet';
+import { Storage } from './storage.js';
 // Add persistent session store (file based)
 import fileStoreFactory from 'session-file-store';
 const FileStore = fileStoreFactory(session);
@@ -14,11 +15,9 @@ const FileStore = fileStoreFactory(session);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DATA_DIR = path.join(__dirname, 'data');
-const ENTRIES_FILE = path.join(DATA_DIR, 'entries.json');
 const ACTIVE_FILE = path.join(DATA_DIR, 'activeSession.json');
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
-if (!fs.existsSync(ENTRIES_FILE)) fs.writeFileSync(ENTRIES_FILE, '[]', 'utf8');
 if (!fs.existsSync(ACTIVE_FILE)) fs.writeFileSync(ACTIVE_FILE, 'null', 'utf8');
 
 // Config
@@ -26,10 +25,6 @@ const PORT = process.env.PORT || 3000;
 const ADMIN_USER = process.env.ADMIN_USER || 'Daniel Streuter';
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '$2b$12$REPLACE_ME_WITH_HASH'; // placeholder
 
-function loadEntries(){
-  try { return JSON.parse(fs.readFileSync(ENTRIES_FILE,'utf8')); } catch { return []; }
-}
-function saveEntries(entries){ fs.writeFileSync(ENTRIES_FILE, JSON.stringify(entries, null, 2)); }
 function loadActive(){ try { return JSON.parse(fs.readFileSync(ACTIVE_FILE,'utf8')); } catch { return null; } }
 function saveActive(a){ fs.writeFileSync(ACTIVE_FILE, JSON.stringify(a, null, 2)); }
 
@@ -100,25 +95,25 @@ app.post('/api/logout', (req,res)=>{
 });
 
 app.get('/api/entries', requireAuth, (req,res)=>{
-  const entries = loadEntries();
+  const entries = Storage.read();
   res.json(entries);
 });
 
 app.post('/api/entries', requireAuth, (req,res)=>{
-  const entries = loadEntries();
   const { client='', skills=[], tasks='', start, end, pauseMs=0, acknowledgedBreak=false } = req.body || {};
   if (!start || !end) return res.status(400).json({error:'Missing start/end'});
   const entry = { id: uuid(), client:String(client), skills:skills.map(s=>String(s)), tasks:String(tasks), start:Number(start), end:Number(end), pauseMs:Number(pauseMs), acknowledgedBreak: !!acknowledgedBreak };
-  entries.push(entry);
-  saveEntries(entries);
+  const list = Storage.read();
+  list.push(entry);
+  Storage.write(list);
   res.status(201).json(entry);
 });
 
 app.put('/api/entries/:id', requireAuth, (req,res)=>{
-  const entries = loadEntries();
-  const idx = entries.findIndex(e=>e.id===req.params.id);
+  const list = Storage.read();
+  const idx = list.findIndex(e=>e.id===req.params.id);
   if (idx===-1) return res.status(404).json({error:'Not found'});
-  const cur = entries[idx];
+  const cur = list[idx];
   const { client, skills, tasks, start, end, pauseMs, acknowledgedBreak } = req.body || {};
   if (start && end && Number(end) <= Number(start)) return res.status(400).json({error:'End must be after start'});
   if (client!==undefined) cur.client=String(client);
@@ -128,16 +123,16 @@ app.put('/api/entries/:id', requireAuth, (req,res)=>{
   if (end!==undefined) cur.end=Number(end);
   if (pauseMs!==undefined) cur.pauseMs=Number(pauseMs);
   if (acknowledgedBreak!==undefined) cur.acknowledgedBreak=!!acknowledgedBreak;
-  saveEntries(entries);
+  Storage.write(list);
   res.json(cur);
 });
 
 app.delete('/api/entries/:id', requireAuth, (req,res)=>{
-  let entries = loadEntries();
-  const lenBefore = entries.length;
-  entries = entries.filter(e=>e.id!==req.params.id);
-  if (entries.length === lenBefore) return res.status(404).json({error:'Not found'});
-  saveEntries(entries);
+  const list = Storage.read();
+  const before = list.length;
+  const next = list.filter(e=>e.id!==req.params.id);
+  if (next.length === before) return res.status(404).json({error:'Not found'});
+  Storage.write(next);
   res.json({ success:true });
 });
 
@@ -183,12 +178,12 @@ app.post('/api/active/cancel', requireAuth, (req,res)=>{ const a = loadActive();
 app.post('/api/active/finish', requireAuth, (req,res)=>{
   const a = loadActive();
   if(!a) return res.status(404).json({error:'No active'});
-  const entries = loadEntries();
+  const list = Storage.read();
   if(a.pauseStartedAt){ a.pauseMs += Date.now() - a.pauseStartedAt; a.pauseStartedAt=null; }
   const end = Date.now();
   const entry = { id: uuid(), client:a.client, skills:a.skills, tasks:a.tasks, start:a.start, end, pauseMs:a.pauseMs, acknowledgedBreak:a.acknowledgedBreak };
-  entries.push(entry);
-  saveEntries(entries);
+  list.push(entry);
+  Storage.write(list);
   saveActive(null);
   res.json(entry);
 });

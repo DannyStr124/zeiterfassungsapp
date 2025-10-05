@@ -207,3 +207,6 @@ app.listen(PORT, '0.0.0.0', ()=>{
   }
 });
 console.log('[Startup] server.js loaded (cwd=', process.cwd(), ')');
+console.log('[Config] DATA_PATH =', Storage.path);
+
+app.get('/health', (req,res)=>res.send('ok'));

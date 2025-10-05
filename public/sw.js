@@ -1,5 +1,5 @@
 // --- Service Worker (versioned) ---
-const SW_VERSION = 'v2.0.2';
+const SW_VERSION = 'v2.0.3';
 const CACHE_NAME = 'zeiterfassung-cache-' + SW_VERSION;
 const CORE_ASSETS = [
   '/',
@@ -48,6 +48,13 @@ self.addEventListener('fetch', e => {
   if(e.request.method !== 'GET') return; // don't touch non-GET
   if(url.origin !== location.origin) return; // ignore external
 
+  // NEVER cache API responses (avoid stale active/entries data)
+  if(url.pathname.startsWith('/api/')){
+    e.respondWith(
+      fetch(e.request).catch(()=>caches.match(e.request)) // fallback only if previously in cache (likely null)
+    );
+    return;
+  }
   // Always network-first for the shell to avoid needing hard reloads
   if(url.pathname === '/' || url.pathname === '/index.html'){
     e.respondWith(networkFirst(e.request));
@@ -58,7 +65,7 @@ self.addEventListener('fetch', e => {
     e.respondWith(cacheFirst(e.request));
     return;
   }
-  // For everything else: try cache, then network (runtime asset caching)
+  // For everything else: try cache, then network (runtime asset caching) BUT skip storing responses with Cache-Control: no-store
   e.respondWith(cacheFirst(e.request));
 });
 

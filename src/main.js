@@ -92,11 +92,27 @@ btnClearTasks?.addEventListener('click', e=>{ e.preventDefault(); if(!inlineTask
 btnToggleNotes?.addEventListener('click', ()=>{ document.body.classList.toggle('inlinePanel-hidden'); });
 
 // --- API Helper ---
+import { emulateApi, enableOffline, offlineInit } from './offlineApi.js';
+
+let useOffline = false;
+(async function initOffline(){ try { await offlineInit(); useOffline = JSON.parse(localStorage.getItem('USE_LOCAL_OFFLINE')||'false'); } catch{} })();
+
 async function api(method, url, body){
-  const res = await fetch(url, { method, headers: { 'Content-Type':'application/json' }, body: body?JSON.stringify(body):undefined, credentials:'include' });
-  if(!res.ok){ let msg='Fehler'; try{ const j=await res.json(); msg=j.error||msg; }catch{} throw new Error(msg); }
-  try { return await res.json(); } catch { return null; }
+  if(useOffline){ return await emulateApi(method, url, body); }
+  try {
+    const res = await fetch(url, { method, headers: { 'Content-Type':'application/json' }, body: body?JSON.stringify(body):undefined, credentials:'include' });
+    if(!res.ok){ let msg='Fehler'; try{ const j=await res.json(); msg=j.error||msg; }catch{} throw new Error(msg); }
+    try { return await res.json(); } catch { return null; }
+  } catch(err){
+    // Fallback to offline emulation when network/server not available
+    console.warn('[API] Falling back to offline mode due to error:', err.message);
+    useOffline = true; enableOffline(true);
+    return await emulateApi(method, url, body);
+  }
 }
+
+window.enableOffline = (flag)=>{ useOffline = !!flag; enableOffline(flag); console.log('Offline mode', useOffline?'enabled':'disabled'); };
+
 async function loadEntries(){ entries = await api('GET','/api/entries'); }
 async function getActive(){ try { const r = await api('GET','/api/active'); return r.active; } catch { return null; } }
 async function startActiveOnServer(){ try { const r= await api('POST','/api/active/start'); return r.active; } catch(e){ if(e.message.includes('exists')) return await getActive(); throw e; } }

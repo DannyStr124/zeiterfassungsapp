@@ -22,6 +22,7 @@ if (!fs.existsSync(ACTIVE_FILE)) fs.writeFileSync(ACTIVE_FILE, 'null', 'utf8');
 
 // Config
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.ALLOW_NETWORK === 'true' ? '0.0.0.0' : '127.0.0.1';
 const ADMIN_USER = process.env.ADMIN_USER || 'Daniel Streuter';
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '$2b$12$REPLACE_ME_WITH_HASH'; // placeholder
 
@@ -200,8 +201,12 @@ if (fs.existsSync(DIST_DIR)) {
   console.log('Kein dist/ gefunden. Für Single-Port Produktion zuerst: npm run build');
 }
 
-app.listen(PORT, '0.0.0.0', ()=>{
-  console.log('Server listening on '+PORT);
+if (process.env.NODE_ENV === 'production' && process.env.ALLOW_NETWORK !== 'true') {
+  console.warn('[Local Only] Server bound to 127.0.0.1. Set ALLOW_NETWORK=true to allow LAN access.');
+}
+
+app.listen(PORT, HOST, ()=>{
+  console.log(`Server listening on ${HOST}:${PORT}`);
   if (ADMIN_PASSWORD_HASH.includes('REPLACE_ME_WITH_HASH')) {
     console.warn('\nIMPORTANT: Set ADMIN_PASSWORD_HASH env var (bcrypt hash of your password).');
   }

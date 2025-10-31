@@ -95,7 +95,7 @@ btnToggleNotes?.addEventListener('click', ()=>{ document.body.classList.toggle('
 import { emulateApi, enableOffline, offlineInit } from './offlineApi.js';
 
 let useOffline = false;
-(async function initOffline(){ try { await offlineInit(); useOffline = JSON.parse(localStorage.getItem('USE_LOCAL_OFFLINE')||'false'); } catch{} })();
+(async function initOffline(){ try { await offlineInit(); useOffline = JSON.parse(localStorage.getItem('USE_LOCAL_OFFLINE')||'true'); } catch{} })();
 
 async function api(method, url, body){
   if(useOffline){ return await emulateApi(method, url, body); }
